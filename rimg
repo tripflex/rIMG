@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# 	     8888888888b     d888 .d8888b.
+# 	       888  8888b   d8888d88P  Y88b
+# 	       888  88888b.d88888888    888
+# 	888d888888  888Y88888P888888
+# 	888P"  888  888 Y888P 888888  88888
+# 	888    888  888  Y8P  888888    888
+# 	888    888  888   "   888Y88b  d88P
+# 	888  8888888888       888 "Y8888P88
+#
+# @title rIMG - Image Resizer
+# ------------------------------------------------------------------------------------------
+# @author Myles McNamara
+# @date 07.18.2013
+# @version 1.0
+# @source http://github.com/tripflex
+# @description Checks image resolution, skip if 1024 or smaller, if not image is resized.
+# @requires ImageMagick
+# ------------------------------------------------------------------------------------------
+# @usage ./rimg <path>
+# ------------------------------------------------------------------------------------------
+# @copyright Copyright (C) 2013  Myles McNamara
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# ------------------------------------------------------------------------------------------
+
+if [ "$#" -lt 1 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ] || [[ $1 == -* ]]; then
+        echo "Usage: $0 <path>" >&2
+        exit
+fi
+clear
+
+OIFS="$IFS"
+IFS=$'\n'
+
+for i in $(find "$1" -type f -name "*.jpg") ; do
+WIDTH=$(convert "$i" -print "%w\n" /dev/null)
+        if(test $WIDTH -gt 1024;)then
+          mogrify -resize 1024 "$i"
+          echo "$i is $WIDTH , CONVERTED to 1024."
+        else
+                height=1
+        fi
+done
+
+IFS="$OIFS"
