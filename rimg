@@ -12,8 +12,8 @@
 # @title rIMG - Image Resizer
 # ------------------------------------------------------------------------------------------
 # @author Myles McNamara
-# @date 07.18.2013
-# @version 1.0
+# @date 08.05.2013
+# @version 1.1
 # @source http://github.com/tripflex
 # @description Checks image resolution, skip if 1024 or smaller, if not image is resized.
 # @requires ImageMagick
@@ -42,17 +42,25 @@ if [ "$#" -lt 1 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ] || [[ $1 == -* ]]; t
 fi
 clear
 
+MAXWIDTH="1024"
+MAXHEIGHT="1024"
+RESIZEWIDTH="1024"
+RESIZEHEIGHT="1024"
 OIFS="$IFS"
 IFS=$'\n'
 
 for i in $(find "$1" -type f -name "*.jpg") ; do
-WIDTH=$(convert "$i" -print "%w\n" /dev/null)
-        if(test $WIDTH -gt 1024;)then
-          mogrify -resize 1024 "$i"
-          echo "$i is $WIDTH , CONVERTED to 1024."
-        else
-                height=1
+        echo "Found file: $i"
+        if [[ $i ]]; then
+                WIDTH=$(identify -format "%w" "$i")
+                HEIGHT=$(identify -format "%h" "$i")
+                if [[ $WIDTH -gt $MAXWIDTH ]] ; then
+                        mogrify -scale $RESIZEWIDTH "$i"
+                        echo "$i had a width of $WIDTH , SCALED to $RESIZEWIDTH"
+                elif [[ $HEIGHT -gt $MAXHEIGHT ]]; then
+                        mogrify -scale x$RESIZEHEIGHT "$i"
+                        echo "$1 had a height of $HEIGHT , SCALED to $RESIZEHEIGHT"
+                fi
         fi
 done
-
 IFS="$OIFS"
