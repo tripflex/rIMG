@@ -12,13 +12,13 @@
 # @title rIMG - Image Resizer
 # ------------------------------------------------------------------------------------------
 # @author Myles McNamara
-# @date 08.05.2013
-# @version 1.1
+# @date 12.06.2013
+# @version 1.2
 # @source http://github.com/tripflex
 # @description Checks image resolution, skip if 1024 or smaller, if not image is resized.
 # @requires ImageMagick
 # ------------------------------------------------------------------------------------------
-# @usage ./rimg <path>
+# @usage ./rimg -q (shows help menu)
 # ------------------------------------------------------------------------------------------
 # @copyright Copyright (C) 2013  Myles McNamara
 #
@@ -36,30 +36,129 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 # ------------------------------------------------------------------------------------------
 
-if [ "$#" -lt 1 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ] || [[ $1 == -* ]]; then
-        echo "Usage: $0 <path>" >&2
-        exit
-fi
-clear
 
-MAXWIDTH="1024"
-MAXHEIGHT="1024"
-RESIZEWIDTH="1024"
-RESIZEHEIGHT="1024"
+# SCRIPT DEFAULTS
+maxwidth="1024"
+maxheight="1024"
+width="1024"
+height="1024"
+
+# Define help function
+function help(){
+    echo "rimg - Re-size Images";
+    echo "Usage example:";
+    echo "rimg (-d|--directory) string [(-q|--help)] [(-v|--verbose)] [(-V|--version)] [(-w|--width) integer] [(-h|--height) integer] [(-x|--max-width) integer] [(-y|--max-height) integer]";
+    echo "Options:";
+    echo "-q or --help: Displays this information.";
+    echo "-v or --verbose: Verbose mode on.";
+    echo "-V or --version: Displays the current version number.";
+    echo "-d or --directory string: Path to directory of images to resize. Required.";
+    echo "-w or --width integer: Width to re-size images (default 1024).";
+    echo "-h or --height integer: Height to re-size images (default 1024).";
+    echo "-x or --max-width integer: Max width an image can be without re-sizing (default 1024).";
+    echo "-y or --max-height integer: Max height an image can be without re-sizing (default 1024).";
+    exit 1;
+}
+
+# Declare vars. Flags initalizing to 0.
+help=0;
+verbose=0;
+version=0;
+
+# Execute getopt
+ARGS=$(getopt -o "qvVd:w:h:x:y:" -l "help,verbose,version,directory:,width:,height:,max-width:,max-height:" -n "rimg" -- "$@");
+
+#Bad arguments
+if [ $? -ne 0 ];
+then
+    help;
+fi
+
+eval set -- "$ARGS";
+
+while true; do
+    case "$1" in
+        -q|--help)
+            shift;
+                    help="1";
+            ;;
+        -v|--verbose)
+            shift;
+                    verbose="1";
+            ;;
+        -V|--version)
+            shift;
+                    version="1";
+            ;;
+        -d|--directory)
+            shift;
+                    if [ -n "$1" ]; 
+                    then
+                        directory="$1";
+                        shift;
+                    fi
+            ;;
+        -w|--width)
+            shift;
+                    if [ -n "$1" ]; 
+                    then
+                        width="$1";
+                        shift;
+                    fi
+            ;;
+        -h|--height)
+            shift;
+                    if [ -n "$1" ]; 
+                    then
+                        height="$1";
+                        shift;
+                    fi
+            ;;
+        -x|--max-width)
+            shift;
+                    if [ -n "$1" ]; 
+                    then
+                        maxwidth="$1";
+                        shift;
+                    fi
+            ;;
+        -y|--max-height)
+            shift;
+                    if [ -n "$1" ]; 
+                    then
+                        maxheight="$1";
+                        shift;
+                    fi
+            ;;
+
+        --)
+            shift;
+            break;
+            ;;
+    esac
+done
+
+# Check required arguments
+if [ -z "$directory" ]
+then
+    echo "directory is required";
+    help;
+fi
+
 OIFS="$IFS"
 IFS=$'\n'
 
-for i in $(find "$1" -type f -name "*.jpg") ; do
+for i in $(find "$directory" -type f -name "*.jpg" -o -name "*.png" -o -name "*.gif") ; do
         echo "Found file: $i"
         if [[ $i ]]; then
-                WIDTH=$(identify -format "%w" "$i")
-                HEIGHT=$(identify -format "%h" "$i")
-                if [[ $WIDTH -gt $MAXWIDTH ]] ; then
-                        mogrify -scale $RESIZEWIDTH "$i"
-                        echo "$i had a width of $WIDTH , SCALED to $RESIZEWIDTH"
-                elif [[ $HEIGHT -gt $MAXHEIGHT ]]; then
-                        mogrify -scale x$RESIZEHEIGHT "$i"
-                        echo "$1 had a height of $HEIGHT , SCALED to $RESIZEHEIGHT"
+                CURWIDTH=$(identify -format "%w" "$i")
+                CURHEIGHT=$(identify -format "%h" "$i")
+                if [[ $CURWIDTH -gt $maxwidth ]] ; then
+                        mogrify -scale $width "$i"
+                        echo "$i had a width of $CURWIDTH, SCALED to $width"
+                elif [[ $CURHEIGHT -gt $maxheight ]]; then
+                        mogrify -scale x$HEIGHT "$i"
+                        echo "$1 had a height of $CURHEIGHT , SCALED to $height"
                 fi
         fi
 done
